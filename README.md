@@ -1,1 +1,1 @@
-# automultidraw
+# IITC plugin : Automultidraw
