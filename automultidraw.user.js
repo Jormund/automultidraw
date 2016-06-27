@@ -2,10 +2,10 @@
 // @id             iitc-plugin-automultidraw@Jormund
 // @name           IITC plugin: Autodraw for multilayered fields
 // @category       Layer
-// @version        0.1.1.20160627.1039
+// @version        0.1.1.20160627.1040
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
 // @downloadURL    https://raw.githubusercontent.com/Jormund/automultidraw/master/automultidraw.user.js
-// @description    [2016-06-27-1039] Autodraw for multilayered fields
+// @description    [2016-06-27-1040] Autodraw for multilayered fields
 // @include        https://www.ingress.com/intel*
 // @include        http://www.ingress.com/intel*
 // @match          https://www.ingress.com/intel*
