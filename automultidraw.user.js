@@ -2,10 +2,10 @@
 // @id             iitc-plugin-automultidraw@Jormund
 // @name           IITC plugin: Automultidraw
 // @category       Layer
-// @version        0.1.1.20160628.1202
+// @version        0.1.2.20160628.1542
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
 // @downloadURL    https://raw.githubusercontent.com/Jormund/automultidraw/master/automultidraw.user.js
-// @description    [2016-06-28-1202] Autodraw for multilayered fields
+// @description    [2016-06-28-1542] Autodraw for multilayered fields
 // @include        https://www.ingress.com/intel*
 // @include        http://www.ingress.com/intel*
 // @match          https://www.ingress.com/intel*
@@ -14,7 +14,7 @@
 // @include        http://www.ingress.com/mission/*
 // @match          https://www.ingress.com/mission/*
 // @match          http://www.ingress.com/mission/*
-// @grant          none
+// @grant          none 
 // ==/UserScript==
 
 function wrapper(plugin_info) {
@@ -83,7 +83,7 @@ function wrapper(plugin_info) {
 
     window.plugin.automultidraw.drawMultilayeredField = function () {
         try {
-
+            var msg = '';
             //var nbDir = 3;
             var dirA = { index: 0 };
             var dirB = { index: 1 };
@@ -100,7 +100,11 @@ function wrapper(plugin_info) {
             //            directions will have the following attributes:
             //              bkmrks : bookmarks of the direction
             //              bkmrks.length : number of portals in the direction
+            //            temp attributes in the loop:
             //              curBkmrk : current bookmark in the loop
+            //              remainingPortalRatio : ratio of portals not used yet in the direction over total number of portals in the direction
+            //              remainingPortalCount : number of portals not used yet in the direction
+            //              consecutiveLayers : number of fields where the current bookmark is used
 
 
             //            local bookmark will have the following attributes:
@@ -130,7 +134,9 @@ function wrapper(plugin_info) {
                 }
             }
             if (bkmrkArr.length < 3) {
-                window.plugin.automultidraw.log(bkmrkArr.length + ' bookmarks found (require 3 to field)');
+                msg = bkmrkArr.length + ' bookmark(s) found (requires minimum 3 to field)';
+                //window.plugin.automultidraw.log(msg);
+                alert(msg);
                 return;
             } //when less than 3 bookmarks, do nothing
             //$('#mobileinfo').html(bkmrkArr.length + ' portals found'); //debug
@@ -155,7 +161,9 @@ function wrapper(plugin_info) {
             });
 
             if (maxDistanceBkmrk1.distanceToPreviousBookmark == -1 || maxDistanceBkmrk2.distanceToPreviousBookmark == -1) {
-                window.plugin.automultidraw.log('No max distance found between bookmarks');
+                msg = 'No max distance found between bookmarks';
+                //window.plugin.automultidraw.log('No max distance found between bookmarks');
+                alert(msg);
                 return;
             } //should not be possible with valid distinct bookmarks
             else {
@@ -183,7 +191,9 @@ function wrapper(plugin_info) {
             var portalCount = bkmrkArr.length;
             var fieldCount = portalCount - 2;
             if (dirA.bkmrks.length + dirB.bkmrks.length + dirC.bkmrks.length != portalCount) {
-                window.plugin.automultidraw.log('Direction lengths and total length dont match');
+                msg = 'Direction lengths and total length dont match';
+                //window.plugin.automultidraw.log('Direction lengths and total length dont match');
+                alert(msg);
                 return;
             }
             //$('#mobileinfo').html('A:' + pCountA + ',B:' + pCountB + ',C:' + pCountC);
@@ -312,7 +322,7 @@ function wrapper(plugin_info) {
             }
 
             var view = window.plugin.automultidraw.isSmart;
-                if(view) {
+            if (view) {
                 latLngs = [];
                 $.each(allDirs, function (i, dir) {
                     latLngs.push(dir.curBkmrk.latLng);
@@ -382,5 +392,3 @@ var info = {};
 if (typeof GM_info !== 'undefined' && GM_info && GM_info.script) info.script = { version: GM_info.script.version, name: GM_info.script.name, description: GM_info.script.description };
 script.appendChild(document.createTextNode('(' + wrapper + ')(' + JSON.stringify(info) + ');'));
 (document.body || document.head || document.documentElement).appendChild(script);
-
-
