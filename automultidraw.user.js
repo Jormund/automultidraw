@@ -2,10 +2,10 @@
 // @id             iitc-plugin-automultidraw@Jormund
 // @name           IITC plugin: Automultidraw
 // @category       Layer
-// @version        0.1.2.20160628.1542
+// @version        0.1.3.20160628.1639
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
 // @downloadURL    https://raw.githubusercontent.com/Jormund/automultidraw/master/automultidraw.user.js
-// @description    [2016-06-28-1542] Autodraw for multilayered fields
+// @description    [2016-06-28-1639] Autodraw for multilayered fields
 // @include        https://www.ingress.com/intel*
 // @include        http://www.ingress.com/intel*
 // @match          https://www.ingress.com/intel*
@@ -84,7 +84,7 @@ function wrapper(plugin_info) {
     window.plugin.automultidraw.drawMultilayeredField = function () {
         try {
             var msg = '';
-            //var nbDir = 3;
+
             var dirA = { index: 0 };
             var dirB = { index: 1 };
             var dirC = { index: 2 };
@@ -113,26 +113,31 @@ function wrapper(plugin_info) {
             //              distanceToPreviousBookmark : distance to the portal that has previous index in bkmrkArr
             //              direction : considering an ABC triangle, values can be dirA, dirB or dirC
 
+            //window.plugin.bookmarks.KEY_OTHER_BKMRK => "idOthers", le dossier racine
+
             //$('#mobileinfo').html('Starting automultidraw'); //debug
             window.plugin.automultidraw.log('Starting automultidraw');
             // var bkmrkObj = {};
             var bkmrkArr = [];
+            var folders = {};
             if (typeof window.plugin.bookmarks.bkmrksObj != 'undefined'
 		            && window.plugin.bookmarks.bkmrksObj.portals != 'undefined') {
-                for (folderId in window.plugin.bookmarks.bkmrksObj.portals) {
-                    var folder = window.plugin.bookmarks.bkmrksObj.portals[folderId];
+                $.each(window.plugin.bookmarks.bkmrksObj.portals, function (folderId, folder) {
                     if (typeof folder.bkmrk != 'undefined') {
-                        for (bookmarkId in folder.bkmrk) {
-                            var bookmarkOri = folder.bkmrk[bookmarkId];
-                            // bkmrkList[bookmarkId] = bookmark;
+                        $.each(folder.bkmrk, function (bookmarkId, bookmarkOri) {
                             var bookmark = {}; //new object so as to not interfere
+                            bookmark.folderId = folderId;
                             bookmark.globalIndex = bkmrkArr.length;
                             bookmark.latLng = window.plugin.automultidraw.latlngToLatLngArr(bookmarkOri.latlng);
                             bkmrkArr.push(bookmark);
-                        }
+
+                            if (typeof folders[folderId] == 'undefined') folders[folderId] = {};
+                            folders[folderId].hasBookmarks = true;
+                        });
                     }
-                }
+                });
             }
+
             if (bkmrkArr.length < 3) {
                 msg = bkmrkArr.length + ' bookmark(s) found (requires minimum 3 to field)';
                 //window.plugin.automultidraw.log(msg);
@@ -142,50 +147,69 @@ function wrapper(plugin_info) {
             //$('#mobileinfo').html(bkmrkArr.length + ' portals found'); //debug
             window.plugin.automultidraw.log(bkmrkArr.length + ' portals found');
 
-            //compute distance between following bookmarks
-            //MAYBE?: use directions to handle max1 and max2 ?
-            var maxDistanceBkmrk1 = { distanceToPreviousBookmark: -1 }, maxDistanceBkmrk2 = { distanceToPreviousBookmark: -2 };
-            $.each(bkmrkArr, function (index, bkmrk) {
-                if (index > 0) {
-                    var previousBkrmk = bkmrkArr[index - 1];
-                    var distance = L.latLng(bkmrk.latLng).distanceTo(previousBkrmk.latLng);
-                    bkmrk.distanceToPreviousBookmark = distance;
-                    if (distance > maxDistanceBkmrk1.distanceToPreviousBookmark) {
-                        maxDistanceBkmrk2 = maxDistanceBkmrk1;
-                        maxDistanceBkmrk1 = bkmrk;
-                    }
-                    else if (distance > maxDistanceBkmrk2.distanceToPreviousBookmark) {
-                        maxDistanceBkmrk2 = bkmrk;
-                    }
-                }
-            });
-
-            if (maxDistanceBkmrk1.distanceToPreviousBookmark == -1 || maxDistanceBkmrk2.distanceToPreviousBookmark == -1) {
-                msg = 'No max distance found between bookmarks';
-                //window.plugin.automultidraw.log('No max distance found between bookmarks');
-                alert(msg);
-                return;
-            } //should not be possible with valid distinct bookmarks
-            else {
-                //$('#mobileinfo').html('Split found by distance'); //debug
-                window.plugin.automultidraw.log('Split found by distance');
-            }
-
-            //we suppose direction changes with the 2 max distances
-            var currentDirection = dirA;
-            //var bkmrksPerDir = {};
             $.each(allDirs, function (i, dir) {
                 //bkmrksPerDir[dir] = [];
                 dir.bkmrks = [];
             });
-            $.each(bkmrkArr, function (index, bkmrk) {
-                if (bkmrk == maxDistanceBkmrk1 || bkmrk == maxDistanceBkmrk2) {
+            var folderCount = Object.keys(folders).length; //no need to check 'hasBookmarks' because we created only objects for used folders
+            if (folderCount == 3) {//when there are exactly 3 folders containing bookmarks, we trust the user's folders
+                window.plugin.automultidraw.log('Spliting by folders');
+                var currentDirection = dirA;
+                $.each(folders, function (folderId, folder) {//assign direction to each folder
+                    folder.direction = currentDirection;
                     currentDirection = allDirs.next(currentDirection);
+                });
+                //currentDirection = null;
+                $.each(bkmrkArr, function (index, bkmrk) {//assign direction to bookmarks of each folder
+                    currentDirection = folders[bkmrk.folderId].direction;
+                    bkmrk.direction = currentDirection;
+                    bkmrk.dirIndex = currentDirection.bkmrks.length;
+                    currentDirection.bkmrks.push(bkmrk);
+                });
+            }
+            else {
+                //compute distance between following bookmarks
+                //MAYBE?: use directions to handle max1 and max2 ?
+                var maxDistanceBkmrk1 = { distanceToPreviousBookmark: -1 }, maxDistanceBkmrk2 = { distanceToPreviousBookmark: -2 };
+                $.each(bkmrkArr, function (index, bkmrk) {
+                    if (index > 0) {
+                        var previousBkrmk = bkmrkArr[index - 1];
+                        var distance = L.latLng(bkmrk.latLng).distanceTo(previousBkrmk.latLng);
+                        bkmrk.distanceToPreviousBookmark = distance;
+                        if (distance > maxDistanceBkmrk1.distanceToPreviousBookmark) {
+                            maxDistanceBkmrk2 = maxDistanceBkmrk1;
+                            maxDistanceBkmrk1 = bkmrk;
+                        }
+                        else if (distance > maxDistanceBkmrk2.distanceToPreviousBookmark) {
+                            maxDistanceBkmrk2 = bkmrk;
+                        }
+                    }
+                });
+
+
+                if (maxDistanceBkmrk1.distanceToPreviousBookmark == -1 || maxDistanceBkmrk2.distanceToPreviousBookmark == -1) {
+                    msg = 'No max distance found between bookmarks';
+                    //window.plugin.automultidraw.log('No max distance found between bookmarks');
+                    alert(msg);
+                    return;
+                } //should not be possible with valid distinct bookmarks
+                else {
+                    //$('#mobileinfo').html('Split found by distance'); //debug
+                    window.plugin.automultidraw.log('Split found by distance');
                 }
-                bkmrk.direction = currentDirection;
-                bkmrk.dirIndex = currentDirection.bkmrks.length;
-                currentDirection.bkmrks.push(bkmrk);
-            });
+
+                //we suppose direction changes with the 2 max distances
+                var currentDirection = dirA;
+                //var bkmrksPerDir = {};
+                $.each(bkmrkArr, function (index, bkmrk) {
+                    if (bkmrk == maxDistanceBkmrk1 || bkmrk == maxDistanceBkmrk2) {
+                        currentDirection = allDirs.next(currentDirection);
+                    }
+                    bkmrk.direction = currentDirection;
+                    bkmrk.dirIndex = currentDirection.bkmrks.length;
+                    currentDirection.bkmrks.push(bkmrk);
+                });
+            }
             window.plugin.automultidraw.log('Portals sorted in directions');
 
             var portalCount = bkmrkArr.length;
@@ -343,13 +367,13 @@ function wrapper(plugin_info) {
 
     window.plugin.automultidraw.log = function (text, overridedebug) {
         if (window.plugin.automultidraw.debug || overridedebug) {
-			if (window.plugin.automultidraw.isSmart) {
+            if (window.plugin.automultidraw.isSmart) {
                 $('#automultidraw-toolbox').html(text + '<br/>' + $('#automultidraw-toolbox').html());
             }
             else {
                 console.log(text);
             }
-		}
+        }
     }
 
     window.plugin.automultidraw.setupContent = function () {
