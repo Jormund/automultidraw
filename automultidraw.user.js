@@ -2,10 +2,10 @@
 // @id             iitc-plugin-automultidraw@Jormund
 // @name           IITC plugin: Automultidraw
 // @category       Layer
-// @version        0.1.3.20160628.1639
+// @version        0.1.4.20160707.1702
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
 // @downloadURL    https://raw.githubusercontent.com/Jormund/automultidraw/master/automultidraw.user.js
-// @description    [2016-06-28-1639] Autodraw for multilayered fields
+// @description    [2016-07-07-1702] Autodraw for multilayered fields
 // @include        https://www.ingress.com/intel*
 // @include        http://www.ingress.com/intel*
 // @match          https://www.ingress.com/intel*
@@ -60,6 +60,14 @@ function wrapper(plugin_info) {
         window.plugin.automultidraw.drawMultilayeredField();
     }
 
+    window.plugin.automultidraw.resetDraw = function () {
+        //similar to window.plugin.drawTools.optReset but without confirmation
+        delete localStorage['plugin-draw-tools-layer'];
+        window.plugin.drawTools.drawnItems.clearLayers();
+        window.plugin.drawTools.load();
+        runHooks('pluginDrawTools', { event: 'clear' });
+    };
+
     window.plugin.automultidraw.latlngToLatLngArr = function (latlngstring) {
         var arr = latlngstring.split(',');
         if (arr.length != 2) return null;
@@ -80,8 +88,16 @@ function wrapper(plugin_info) {
         return layer;
     }
 
+    window.plugin.automultidraw.drawBalanced = function () {
+        window.plugin.automultidraw.drawMultilayeredField({ balanced: true });
+    }
+    window.plugin.automultidraw.drawStacked = function () {
+        window.plugin.automultidraw.drawMultilayeredField({ balanced: false });
+    }
 
-    window.plugin.automultidraw.drawMultilayeredField = function () {
+    window.plugin.automultidraw.drawMultilayeredField = function (options) {
+        if (typeof options == 'undefined') options = { balanced: true };
+
         try {
             var msg = '';
 
@@ -239,78 +255,90 @@ function wrapper(plugin_info) {
                 dir.consecutiveLayers = 1; //used in the loop
             });
 
+
             for (var f = 2; f <= fieldCount; f++) {
                 //find the portal that changes
                 var changeDir = null;
                 var testDirs = allDirs.slice(0);
 
-                //Remaining portals ratio
-                if (testDirs.length > 1) {
-                    var maxRemainingPortalRatio = -Infinity;
-                    $.each(testDirs, function (i, dir) {
-                        //Count ratio between remaining portals and past portals to give priority to max.
-                        dir.remainingPortalCount = (dir.bkmrks.length - (dir.curBkmrk.dirIndex + 1));
-                        dir.remainingPortalRatio = dir.remainingPortalCount / dir.bkmrks.length;
-                        if (dir.remainingPortalRatio > maxRemainingPortalRatio)
-                            maxRemainingPortalRatio = dir.remainingPortalRatio;
-                    });
-
-                    //Is max of ratio ?
+                if (options.balanced) {//balanced
+                    //Remaining portals ratio
                     if (testDirs.length > 1) {
-                        testDirs = $.grep(testDirs, function (dir, i) {
-                            if (dir.remainingPortalRatio < maxRemainingPortalRatio) return false;
-                            else return true;
+                        var maxRemainingPortalRatio = -Infinity;
+                        $.each(testDirs, function (i, dir) {
+                            //Count ratio between remaining portals and past portals to give priority to max.
+                            dir.remainingPortalCount = (dir.bkmrks.length - (dir.curBkmrk.dirIndex + 1));
+                            dir.remainingPortalRatio = dir.remainingPortalCount / dir.bkmrks.length;
+                            if (dir.remainingPortalRatio > maxRemainingPortalRatio)
+                                maxRemainingPortalRatio = dir.remainingPortalRatio;
                         });
-                        window.plugin.automultidraw.log('After max ratio: testDirs.length=' + testDirs.length);
-                        //Has most remaining portals ?
+
+                        //Is max of ratio ?
                         if (testDirs.length > 1) {
-                            var maxPortals = -Infinity;
-                            $.each(testDirs, function (i, dir) {
-                                if (dir.remainingPortalCount > maxPortals)
-                                    maxPortals = dir.remainingPortalCount;
-                                //                                if (dir.bkmrks.length > maxPortals)
-                                //                                    maxPortals = dir.bkmrks.length;
-                            });
                             testDirs = $.grep(testDirs, function (dir, i) {
-                                //if (dir.bkmrks.length < maxPortals) return false;
-                                if (dir.remainingPortalCount < maxPortals) return false;
+                                if (dir.remainingPortalRatio < maxRemainingPortalRatio) return false;
                                 else return true;
                             });
-                            window.plugin.automultidraw.log('After max portals: testDirs.length=' + testDirs.length);
-
-                            //Is max of consecutive layers ?
+                            window.plugin.automultidraw.log('After max ratio: testDirs.length=' + testDirs.length);
+                            //Has most remaining portals ?
                             if (testDirs.length > 1) {
-                                var maxConsecutiveLayers = -Infinity;
+                                var maxPortals = -Infinity;
                                 $.each(testDirs, function (i, dir) {
-                                    if (dir.consecutiveLayers > maxConsecutiveLayers)
-                                        maxConsecutiveLayers = dir.consecutiveLayers;
+                                    if (dir.remainingPortalCount > maxPortals)
+                                        maxPortals = dir.remainingPortalCount;
+                                    //                                if (dir.bkmrks.length > maxPortals)
+                                    //                                    maxPortals = dir.bkmrks.length;
                                 });
                                 testDirs = $.grep(testDirs, function (dir, i) {
-                                    if (dir.consecutiveLayers < maxConsecutiveLayers) return false;
+                                    //if (dir.bkmrks.length < maxPortals) return false;
+                                    if (dir.remainingPortalCount < maxPortals) return false;
                                     else return true;
                                 });
+                                window.plugin.automultidraw.log('After max portals: testDirs.length=' + testDirs.length);
+
+                                //Is max of consecutive layers ?
+                                if (testDirs.length > 1) {
+                                    var maxConsecutiveLayers = -Infinity;
+                                    $.each(testDirs, function (i, dir) {
+                                        if (dir.consecutiveLayers > maxConsecutiveLayers)
+                                            maxConsecutiveLayers = dir.consecutiveLayers;
+                                    });
+                                    testDirs = $.grep(testDirs, function (dir, i) {
+                                        if (dir.consecutiveLayers < maxConsecutiveLayers) return false;
+                                        else return true;
+                                    });
+                                }
                             }
                         }
                     }
-                }
-                //Arbitrary ensure only one result (A before B before C when same priority)
-                //(thus with a balanced plan, A will always be chosen before B and B before C)
-                window.plugin.automultidraw.log('Before arbitrary: testDirs.length=' + testDirs.length);
-                if (testDirs.length == 1) {
-                    changeDir = testDirs[0]; //one result, we take it
-                }
-                else if (testDirs.length > 1) {
-                    changeDir = testDirs[0]; //multiple result, arbitrary take the first one 
-                }
-                else {//testDirs.length = 0;
-                    //should never happen because algorithm is based on max
-                }
-                $.each(allDirs, function (i, dir) {
-                    if (changeDir == dir)
-                        changeDir.consecutiveLayers = 1;
-                    else
-                        dir.consecutiveLayers++;
-                });
+                    //Arbitrary ensure only one result (A before B before C when same priority)
+                    //(thus with a balanced plan, A will always be chosen before B and B before C)
+                    window.plugin.automultidraw.log('Before arbitrary: testDirs.length=' + testDirs.length);
+                    if (testDirs.length == 1) {
+                        changeDir = testDirs[0]; //one result, we take it
+                    }
+                    else if (testDirs.length > 1) {
+                        changeDir = testDirs[0]; //multiple result, arbitrary take the first one 
+                    }
+                    else {//testDirs.length = 0;
+                        //should never happen because algorithm is based on max
+                    }
+                    $.each(allDirs, function (i, dir) {
+                        if (changeDir == dir)
+                            changeDir.consecutiveLayers = 1;
+                        else
+                            dir.consecutiveLayers++;
+                    });
+                } //end of balanced
+                else {//stacked
+                    $.each(allDirs, function (i, dir) {
+                        dir.remainingPortalCount = (dir.bkmrks.length - (dir.curBkmrk.dirIndex + 1));
+                        if (dir.remainingPortalCount > 0) {
+                            changeDir = dir;
+                            return false; //breaking the loop makes us change only one portal
+                        }
+                    });
+                } //end of stacked
                 if (changeDir != null) {
                     window.plugin.automultidraw.log('changeDir:' + changeDir.index);
                     window.plugin.automultidraw.log('changeDir.remainingPortalRatio:' + changeDir.remainingPortalRatio);
@@ -365,10 +393,10 @@ function wrapper(plugin_info) {
     }
     /***************************************************************************************************************************************************************/
 
-    window.plugin.automultidraw.log = function (text, overridedebug) {
-        if (window.plugin.automultidraw.debug || overridedebug) {
+    window.plugin.automultidraw.log = function (text, isError) {
+        if (window.plugin.automultidraw.debug || isError) {
             if (window.plugin.automultidraw.isSmart) {
-                $('#automultidraw-toolbox').html(text + '<br/>' + $('#automultidraw-toolbox').html());
+                $('#automultidraw-log').prepend(text + '<br/>');
             }
             else {
                 console.log(text);
@@ -376,10 +404,11 @@ function wrapper(plugin_info) {
         }
     }
 
-    window.plugin.automultidraw.setupContent = function () {
-        plugin.automultidraw.htmlCalldrawBox = '<a onclick="window.plugin.automultidraw.dialogDrawer();return false;" '
-										+ 'accesskey="q" title="Draw multilayered field between bookmarked portals [q]">Automultidraw</a>';
-    }
+    //window.plugin.automultidraw.setupContent = function () {
+    //plugin.automultidraw.htmlCalldrawBox = '<a onclick="window.plugin.automultidraw.dialogDrawer();return false;" '
+    //								+ 'accesskey="q" title="Draw multilayered field between bookmarked portals [q]">Automultidraw</a>';
+    //plugin.automultidraw.htmlToolBox = '<div id="drawstore-toolbox" style="padding:3px;"></div>';
+    //}
 
     /***************************************************************************************************************************************************************/
 
@@ -388,17 +417,36 @@ function wrapper(plugin_info) {
             alert('Bookmarks plugin required');
             return false;
         }
+        if (!window.plugin.drawTools) {
+            alert('Draw tools plugin required');
+            return false;
+        }
         window.plugin.automultidraw.isSmart = window.isSmartphone();
 
-        // Fired when a bookmarks/folder is removed, added or sorted, also when a folder is opened/closed.
-        window.plugin.automultidraw.setupContent();
+        //window.plugin.automultidraw.setupContent();
         // window.plugin.automultidraw.setupCSS();
 
-        $('#toolbox').append(window.plugin.automultidraw.htmlCalldrawBox);
+        //$('#toolbox').append(window.plugin.automultidraw.htmlCalldrawBox);
+
+        // toolbox menu
+        $('#toolbox').after('<div id="drawstore-toolbox" style="padding:3px;"></div>');
+        $('#drawstore-toolbox')
+			.append(' <strong>Automultidraw : </strong>')
+			.append(' <a onclick="window.plugin.automultidraw.drawBalanced()" title="Draw balanced multilayered field between bookmarked portals">Balanced</a>&nbsp;&nbsp;')
+            .append(' <a onclick="window.plugin.automultidraw.drawStacked()" title="Draw multilayered field between bookmarks stacking fields on first portal">Stacked</a>&nbsp;&nbsp;')
+			.append(' <a onclick="window.plugin.automultidraw.resetDraw()">Clear all draws</a>');
+
+
 
         if (window.plugin.automultidraw.isSmart) {
-            $('#toolbox').after('<div id="automultidraw-toolbox"></div>');
+            $('#drawstore-toolbox').append('<div id="automultidraw-log"></div>');
         }
+
+        //alert('end of Automultidraw setup');
+        //TODO: android Pane
+        //if(window.useAndroidPanes())
+        //android.addPane("plugin-bookmarks", "Bookmarks", "ic_action_star");
+        //window.addHook('paneChanged', window.plugin.bookmarks.onPaneChanged);
     }
 
     // PLUGIN END //////////////////////////////////////////////////////////
