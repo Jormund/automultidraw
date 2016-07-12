@@ -2,10 +2,10 @@
 // @id             iitc-plugin-automultidraw@Jormund
 // @name           IITC plugin: Automultidraw
 // @category       Layer
-// @version        0.1.5.20160708.0931
+// @version        0.1.6.20160712.1149
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
 // @downloadURL    https://raw.githubusercontent.com/Jormund/automultidraw/master/automultidraw.user.js
-// @description    [2016-07-08-0931] Autodraw for multilayered fields
+// @description    [2016-07-12-1149] Autodraw for multilayered fields
 // @include        https://www.ingress.com/intel*
 // @include        http://www.ingress.com/intel*
 // @match          https://www.ingress.com/intel*
@@ -25,42 +25,42 @@ function wrapper(plugin_info) {
 
     // use own namespace for plugin
     window.plugin.automultidraw = function () { };
-	window.plugin.automultidraw.KEY_STORAGE = 'automultidraw-storage';
-	window.plugin.automultidraw.FIELD_MODE_BALANCED = 'FIELD_MODE_BALANCED';
-	window.plugin.automultidraw.FIELD_MODE_STACKED = 'FIELD_MODE_STACKED';
-	window.plugin.automultidraw.storage = { clearBeforeDraw : true, fieldMode : window.plugin.automultidraw.FIELD_MODE_BALANCED };
+    window.plugin.automultidraw.KEY_STORAGE = 'automultidraw-storage';
+    window.plugin.automultidraw.FIELD_MODE_BALANCED = 'FIELD_MODE_BALANCED';
+    window.plugin.automultidraw.FIELD_MODE_STACKED = 'FIELD_MODE_STACKED';
+    window.plugin.automultidraw.storage = { clearBeforeDraw: true, fieldMode: window.plugin.automultidraw.FIELD_MODE_BALANCED };
     window.plugin.automultidraw.debug = false;
-    window.plugin.automultidraw.isSmart = undefined;//will be true on smartphones after setup
+    window.plugin.automultidraw.isSmart = undefined; //will be true on smartphones after setup
     // window.plugin.automultidraw.isAndroid = function() {
     // if(typeof android !== 'undefined' && android) {
     // return true;
     // }
     // return false;
     // }
-	// update the localStorage datas
-	window.plugin.automultidraw.saveStorage = function() {
-		localStorage[window.plugin.automultidraw.KEY_STORAGE] = JSON.stringify(window.plugin.automultidraw.storage);
-	};
+    // update the localStorage datas
+    window.plugin.automultidraw.saveStorage = function () {
+        localStorage[window.plugin.automultidraw.KEY_STORAGE] = JSON.stringify(window.plugin.automultidraw.storage);
+    };
 
-	// load the localStorage datas
-	window.plugin.automultidraw.loadStorage = function() {
-		if (typeof localStorage[window.plugin.automultidraw.KEY_STORAGE] != "undefined") {
-			window.plugin.automultidraw.storage = JSON.parse(localStorage[window.plugin.automultidraw.KEY_STORAGE]);
-		}
-		
-		//ensure default values are always set
-		if(typeof window.plugin.automultidraw.storage.clearBeforeDraw == "undefined") {
-			window.plugin.automultidraw.storage.clearBeforeDraw = true;
-		}
-		if(typeof window.plugin.automultidraw.storage.fieldMode == "undefined") {
-			window.plugin.automultidraw.storage.fieldMode = window.plugin.automultidraw.FIELD_MODE_BALANCED;
-		}
-	};
-	
-	window.plugin.automultidraw.clearBeforeDrawClicked = function() {
-		window.plugin.automultidraw.storage.clearBeforeDraw = $("#automultidraw-clearBeforeDraw").is(":checked");
-		window.plugin.automultidraw.saveStorage();
-	};
+    // load the localStorage datas
+    window.plugin.automultidraw.loadStorage = function () {
+        if (typeof localStorage[window.plugin.automultidraw.KEY_STORAGE] != "undefined") {
+            window.plugin.automultidraw.storage = JSON.parse(localStorage[window.plugin.automultidraw.KEY_STORAGE]);
+        }
+
+        //ensure default values are always set
+        if (typeof window.plugin.automultidraw.storage.clearBeforeDraw == "undefined") {
+            window.plugin.automultidraw.storage.clearBeforeDraw = true;
+        }
+        if (typeof window.plugin.automultidraw.storage.fieldMode == "undefined") {
+            window.plugin.automultidraw.storage.fieldMode = window.plugin.automultidraw.FIELD_MODE_BALANCED;
+        }
+    };
+
+    window.plugin.automultidraw.clearBeforeDrawClicked = function () {
+        window.plugin.automultidraw.storage.clearBeforeDraw = $("#automultidraw-clearBeforeDraw").is(":checked");
+        window.plugin.automultidraw.saveStorage();
+    };
 
     /***************************************************************************************************************************************************************/
     /** DRAW **************************************************************************************************************************************************/
@@ -95,7 +95,7 @@ function wrapper(plugin_info) {
         runHooks('pluginDrawTools', { event: 'clear' });
     };
 
-	//convert latlng string from Bookmarks to array of numbers (for Leaflet)
+    //convert latlng string from Bookmarks to array of numbers (for Leaflet)
     window.plugin.automultidraw.latlngToLatLngArr = function (latlngstring) {
         var arr = latlngstring.split(',');
         if (arr.length != 2) return null;
@@ -103,6 +103,22 @@ function wrapper(plugin_info) {
         arr[1] = parseFloat(arr[1]);
         if (isNaN(arr[0]) || isNaN(arr[1])) return null;
         return arr;
+    }
+
+    window.plugin.automultidraw.areaToReadable = function (areaInSquareMeters) {
+        if (areaInSquareMeters > 100000) {
+            var areaInSquareKilometers = areaInSquareMeters / 1000000;
+            if (areaInSquareKilometers < 1000)
+                return areaInSquareKilometers.toFixed(2) + 'km&sup2;';
+            else
+                return areaInSquareKilometers.toFixed(0) + 'km&sup2;';
+        }
+        else {
+            if (areaInSquareMeters < 1000)
+                return areaInSquareMeters.toFixed(2) + 'm&sup2;';
+            else
+                return areaInSquareMeters.toFixed(0) + 'm&sup2;';
+        }
     }
 
     window.plugin.automultidraw.drawLine = function (latlngs) {
@@ -115,38 +131,20 @@ function wrapper(plugin_info) {
         });
         return layer;
     }
-	window.plugin.automultidraw.fieldModeChanged = function () {
-		window.plugin.automultidraw.storage.fieldMode  = $('#automultidraw-fieldMode').val();
-		window.plugin.automultidraw.saveStorage();
-	}
-	window.plugin.automultidraw.drawClicked = function () {
-		if(window.plugin.automultidraw.storage.clearBeforeDraw) {
-			window.plugin.automultidraw.resetDraw();
-		}
-		
-		var options = { 
-					fieldMode: window.plugin.automultidraw.storage.fieldMode 
-					}
-		window.plugin.automultidraw.drawMultilayeredField(options);
-	}
-	// window.plugin.automultidraw.drawBalancedClicked = function () {
-		// if(window.plugin.automultidraw.storage.clearBeforeDraw) {
-			// window.plugin.automultidraw.resetDraw();
-		// }
-		// window.plugin.automultidraw.drawBalanced();
-    // }
-    // window.plugin.automultidraw.drawBalanced = function () {
-        // window.plugin.automultidraw.drawMultilayeredField({ balanced: true });
-    // }
-	// window.plugin.automultidraw.drawStackedClicked = function () {
-		// if(window.plugin.automultidraw.storage.clearBeforeDraw) {
-			// window.plugin.automultidraw.resetDraw();
-		// }
-		// window.plugin.automultidraw.drawStacked();
-    // }
-    // window.plugin.automultidraw.drawStacked = function () {
-        // window.plugin.automultidraw.drawMultilayeredField({ balanced: false });
-    // }
+    window.plugin.automultidraw.fieldModeChanged = function () {
+        window.plugin.automultidraw.storage.fieldMode = $('#automultidraw-fieldMode').val();
+        window.plugin.automultidraw.saveStorage();
+    }
+    window.plugin.automultidraw.drawClicked = function () {
+        if (window.plugin.automultidraw.storage.clearBeforeDraw) {
+            window.plugin.automultidraw.resetDraw();
+        }
+
+        var options = {
+            fieldMode: window.plugin.automultidraw.storage.fieldMode
+        }
+        window.plugin.automultidraw.drawMultilayeredField(options);
+    }
 
     window.plugin.automultidraw.drawMultilayeredField = function (options) {
         if (typeof options == 'undefined') options = { fieldMode: window.plugin.automultidraw.FIELD_MODE_BALANCED };
@@ -197,7 +195,8 @@ function wrapper(plugin_info) {
                             var bookmark = {}; //new object so as to not interfere
                             bookmark.folderId = folderId;
                             bookmark.globalIndex = bkmrkArr.length;
-                            bookmark.latLng = window.plugin.automultidraw.latlngToLatLngArr(bookmarkOri.latlng);
+                            bookmark.latLngArr = window.plugin.automultidraw.latlngToLatLngArr(bookmarkOri.latlng);
+                            bookmark.latLng = L.latLng(bookmark.latLngArr);
                             bkmrkArr.push(bookmark);
 
                             if (typeof folders[folderId] == 'undefined') folders[folderId] = {};
@@ -243,7 +242,7 @@ function wrapper(plugin_info) {
                 $.each(bkmrkArr, function (index, bkmrk) {
                     if (index > 0) {
                         var previousBkrmk = bkmrkArr[index - 1];
-                        var distance = L.latLng(bkmrk.latLng).distanceTo(previousBkrmk.latLng);
+                        var distance = bkmrk.latLng.distanceTo(previousBkrmk.latLng);
                         bkmrk.distanceToPreviousBookmark = distance;
                         if (distance > maxDistanceBkmrk1.distanceToPreviousBookmark) {
                             maxDistanceBkmrk2 = maxDistanceBkmrk1;
@@ -308,6 +307,13 @@ function wrapper(plugin_info) {
                 dir.consecutiveLayers = 1; //used in the loop
             });
 
+            var cumulatedArea = 0;
+            //latLngs = [L.LatLng(dirA.curBkmrk.latLng[0], dirA.curBkmrk.latLng[1]),
+            //             L.LatLng(dirB.curBkmrk.latLng[0], dirB.curBkmrk.latLng[1]),
+            //             L.LatLng(dirC.curBkmrk.latLng[0], dirC.curBkmrk.latLng[1])];
+            latLngs = [dirA.curBkmrk.latLng, dirB.curBkmrk.latLng, dirC.curBkmrk.latLng]
+            var area = L.GeometryUtil.geodesicArea(latLngs);
+            cumulatedArea += area;
 
             for (var f = 2; f <= fieldCount; f++) {
                 //find the portal that changes
@@ -407,6 +413,10 @@ function wrapper(plugin_info) {
                     window.plugin.automultidraw.drawLine(latLngs);
                     latLngs = [changeDir.curBkmrk.latLng, allDirs.prev(changeDir).curBkmrk.latLng];
                     window.plugin.automultidraw.drawLine(latLngs);
+
+                    latLngs = [changeDir.curBkmrk.latLng, allDirs.next(changeDir).curBkmrk.latLng, allDirs.prev(changeDir).curBkmrk.latLng]
+                    var area = L.GeometryUtil.geodesicArea(latLngs);
+                    cumulatedArea += area;
                 }
                 else {
                     //should never happen
@@ -436,18 +446,30 @@ function wrapper(plugin_info) {
                 layerType = 'polygon';
                 map.fitBounds(layer.getBounds());
             }
+
+            msg = 'Area: ' + window.plugin.automultidraw.areaToReadable(cumulatedArea);
+            window.plugin.automultidraw.setMessage(msg);
         }
         catch (err) {
             //$('#mobileinfo').html(err.message); //debug
             //window.debug.console.error(err.message);
             //window.plugin.automultidraw.log('Message:'+err.message);
-			if(window.plugin.automultidraw.isSmart)
-				window.plugin.automultidraw.log(err.stack, true);
-			else
-				throw err;
+            if (window.plugin.automultidraw.isSmart)
+                window.plugin.automultidraw.log(err.stack, true);
+            else
+                throw err;
         }
     }
     /***************************************************************************************************************************************************************/
+    window.plugin.automultidraw.setMessage = function (text) {
+        $('#automultidraw-message').html(text);
+    }
+    window.plugin.automultidraw.addMessage = function (text) {
+        if ($('#automultidraw-message').html() == '')
+            $('#automultidraw-message').html(text);
+        else
+            $('#automultidraw-message').append('<br/>' + text);
+    }
 
     window.plugin.automultidraw.log = function (text, isError) {
         if (window.plugin.automultidraw.debug || isError) {
@@ -478,8 +500,8 @@ function wrapper(plugin_info) {
             return false;
         }
         window.plugin.automultidraw.isSmart = window.isSmartphone();
-		
-		window.plugin.automultidraw.loadStorage();
+
+        window.plugin.automultidraw.loadStorage();
         //window.plugin.automultidraw.setupContent();
         // window.plugin.automultidraw.setupCSS();
 
@@ -487,22 +509,23 @@ function wrapper(plugin_info) {
 
         // toolbox menu
         $('#toolbox').after('<div id="automultidraw-toolbox" style="padding:3px;"></div>');
-		var amdToolbox = $('#automultidraw-toolbox');
+        var amdToolbox = $('#automultidraw-toolbox');
         amdToolbox.append(' <strong>Automultidraw : </strong>');
-		amdToolbox.append('<a onclick="window.plugin.automultidraw.drawClicked()" title="Draw multilayered field between bookmarked portals">Draw</a>&nbsp;&nbsp;');
-			//.append(' <a onclick="window.plugin.automultidraw.drawBalanced()" title="Draw balanced multilayered field between bookmarked portals">Balanced</a>&nbsp;&nbsp;')
-            //.append(' <a onclick="window.plugin.automultidraw.drawStacked()" title="Draw multilayered field between bookmarks stacking fields on first portal">Stacked</a>&nbsp;&nbsp;')
-			//.append(' <a onclick="window.plugin.automultidraw.resetDraw()">Clear all draws</a>');
-		amdToolbox.append('<select id="automultidraw-fieldMode" onchange="window.plugin.automultidraw.fieldModeChanged()"></select>');
-		$('#automultidraw-fieldMode').append('<option value="'+window.plugin.automultidraw.FIELD_MODE_BALANCED+'">Balanced</option>')
-									.append('<option value="'+window.plugin.automultidraw.FIELD_MODE_STACKED+'">Stacked</option>')
+        amdToolbox.append('<a onclick="window.plugin.automultidraw.drawClicked()" title="Draw multilayered field between bookmarked portals">Draw</a>&nbsp;&nbsp;');
+        //.append(' <a onclick="window.plugin.automultidraw.drawBalanced()" title="Draw balanced multilayered field between bookmarked portals">Balanced</a>&nbsp;&nbsp;')
+        //.append(' <a onclick="window.plugin.automultidraw.drawStacked()" title="Draw multilayered field between bookmarks stacking fields on first portal">Stacked</a>&nbsp;&nbsp;')
+        //.append(' <a onclick="window.plugin.automultidraw.resetDraw()">Clear all draws</a>');
+        amdToolbox.append('<select id="automultidraw-fieldMode" onchange="window.plugin.automultidraw.fieldModeChanged()"></select>');
+        $('#automultidraw-fieldMode').append('<option value="' + window.plugin.automultidraw.FIELD_MODE_BALANCED + '">Balanced</option>')
+									.append('<option value="' + window.plugin.automultidraw.FIELD_MODE_STACKED + '">Stacked</option>')
 									;
-		amdToolbox.append(' <br /><input id="automultidraw-clearBeforeDraw" type="checkbox" onclick="window.plugin.automultidraw.clearBeforeDrawClicked()" />');
-		amdToolbox.append('<label for="automultidraw-clearBeforeDraw">Clear before draw</label>');
-			
-		$('#automultidraw-clearBeforeDraw').prop('checked',window.plugin.automultidraw.storage.clearBeforeDraw);
-		$('#automultidraw-fieldMode').val(window.plugin.automultidraw.storage.fieldMode);
+        amdToolbox.append(' <br /><input id="automultidraw-clearBeforeDraw" type="checkbox" onclick="window.plugin.automultidraw.clearBeforeDrawClicked()" />');
+        amdToolbox.append('<label for="automultidraw-clearBeforeDraw">Clear before draw</label>');
 
+        $('#automultidraw-clearBeforeDraw').prop('checked', window.plugin.automultidraw.storage.clearBeforeDraw);
+        $('#automultidraw-fieldMode').val(window.plugin.automultidraw.storage.fieldMode);
+
+        $('#automultidraw-toolbox').append('<div id="automultidraw-message"></div>');
 
         if (window.plugin.automultidraw.isSmart) {
             $('#automultidraw-toolbox').append('<div id="automultidraw-log"></div>');
