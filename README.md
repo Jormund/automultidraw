@@ -13,8 +13,8 @@ How to use it:
 
 ![Side panel](https://cdn.rawgit.com/Jormund/automultidraw/master/img/toolbox.png)
 
-"Stacked" mode will add all the portals from the first set (spine) to the drawing, then all the second, then all the third.  1, 1, 1, etc., 2, 2, 2, etc., 3, 3, 3, etc.
-"Balanced" mode will try to balance the number of links per portal. If all spines are the same length (same number of portals), the drawing will rotate which spine is used for each layer.  1, 2, 3, 1, 2, 3, etc.
+"Stacked" mode will add all the portals from the first set (spine) to the drawing, then all the second, then all the third.  1, 1, 1, etc., 2, 2, 2, etc., 3, 3, 3, etc.  
+"Balanced" mode will try to balance the number of links per portal. If all spines are the same length (same number of portals), the drawing will rotate which spine is used for each layer.  1, 2, 3, 1, 2, 3, etc.  
 Area displayed is the total of all layers.  
 
 
