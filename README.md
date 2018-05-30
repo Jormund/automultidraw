@@ -4,7 +4,7 @@ Requires draw tools and bookmarks.
 
 ![How to animation](https://cdn.rawgit.com/Jormund/automultidraw/master/img/stacked.gif)  
 How to use it:
-1) Save existing bookmarks and draws so you don't lose them.
+1) Save existing bookmarks and draws so you don't lose them. ([bookmarkstore](https://cdn.rawgit.com/Jormund/bookmarkstore/master/bookmarkstore.user.js) and [drawstore](https://github.com/Hurqalia/drawstore/raw/master/drawstore.user.js) can help you with that)
 2) Clear bookmarks.
 3) Bookmark the first set of portals (1st spine), from the inside out.
 4) Bookmark the second set of portals (2nd spine), from the inside out.
