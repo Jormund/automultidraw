@@ -1,8 +1,8 @@
 # IITC plugin : Automultidraw
-[Download](https://cdn.rawgit.com/Jormund/automultidraw/master/automultidraw.user.js)
+[Download plugin](https://cdn.rawgit.com/Jormund/automultidraw/master/automultidraw.user.js)  
 Requires draw tools and bookmarks.
 
-![How to animation](https://cdn.rawgit.com/Jormund/automultidraw/master/img/stacked.gif)
+![How to animation](https://cdn.rawgit.com/Jormund/automultidraw/master/img/stacked.gif)  
 How to use it:
 1) Save existing bookmarks and draws so you don't lose them.
 2) Clear bookmarks.
