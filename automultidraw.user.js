@@ -2,11 +2,11 @@
 // @id             iitc-plugin-automultidraw@Jormund
 // @name           IITC plugin: Automultidraw
 // @category       Layer
-// @version        0.1.8.20180801.1456
+// @version        0.1.8.20180801.1710
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion*
 // @updateURL      https://cdn.rawgit.com/Jormund/automultidraw/master/automultidraw.meta.js
 // @downloadURL    https://cdn.rawgit.com/Jormund/automultidraw/master/automultidraw.user.js
-// @description    [2018-08-01-1456] Autodraw for multilayered fields
+// @description    [2018-08-01-1710] Autodraw for multilayered fields
 // @include        https://ingress.com/intel*
 // @include        http://ingress.com/intel*
 // @include        https://*.ingress.com/intel*
@@ -38,7 +38,11 @@ function wrapper(plugin_info) {
         ONE_POLYLINE_PER_FIELD: 'ONE_POLYLINE_PER_FIELD',
         ONE_POLYGON_PER_FIELD: 'ONE_POLYGON_PER_FIELD'
     };
-    window.plugin.automultidraw.storage = { clearBeforeDraw: true, fieldMode: window.plugin.automultidraw.FIELD_MODE.BALANCED };
+    window.plugin.automultidraw.storage = {
+        clearBeforeDraw: true,
+        fieldMode: window.plugin.automultidraw.FIELD_MODE.BALANCED,
+        drawnItemType: window.plugin.automultidraw.DRAWN_ITEM_TYPE.ONE_LINE_PER_LINK
+    };
     window.plugin.automultidraw.debug = false;
     window.plugin.automultidraw.isSmart = undefined; //will be true on smartphones after setup
     // window.plugin.automultidraw.isAndroid = function() {
@@ -55,21 +59,23 @@ function wrapper(plugin_info) {
     // load the localStorage datas
     window.plugin.automultidraw.loadStorage = function () {
         if (typeof localStorage[window.plugin.automultidraw.KEY_STORAGE] != "undefined") {
-            window.plugin.automultidraw.storage = JSON.parse(localStorage[window.plugin.automultidraw.KEY_STORAGE]);
+            try {
+                window.plugin.automultidraw.storage = JSON.parse(localStorage[window.plugin.automultidraw.KEY_STORAGE]);
+            } catch (err) {
+                window.plugin.automultidraw.log(err.stack, true);
+                window.plugin.automultidraw.storage = {};
+            }
         }
 
         //ensure default values are always set
         if (typeof window.plugin.automultidraw.storage.clearBeforeDraw == "undefined") {
             window.plugin.automultidraw.storage.clearBeforeDraw = true;
         }
-        if (typeof window.plugin.automultidraw.storage.fieldMode == "undefined"
-        //            || (window.plugin.automultidraw.storage.fieldMode != window.plugin.automultidraw.FIELD_MODE.BALANCED
-        //                && window.plugin.automultidraw.storage.fieldMode != window.plugin.automultidraw.FIELD_MODE.STACKED)
-                ) {
+        if (typeof window.plugin.automultidraw.storage.fieldMode == "undefined") {
             window.plugin.automultidraw.storage.fieldMode = window.plugin.automultidraw.FIELD_MODE.BALANCED;
         }
         if (typeof window.plugin.automultidraw.storage.drawnItemType == "undefined") {
-            window.plugin.automultidraw.storage.drawnItemType = window.plugin.automultidraw.DRAWN_ITEM_TYPE.THREE_POLYLINES;
+            window.plugin.automultidraw.storage.drawnItemType = window.plugin.automultidraw.DRAWN_ITEM_TYPE.ONE_LINE_PER_LINK;
         }
         //conversion from old value
         if (window.plugin.automultidraw.storage.fieldMode == 'FIELD_MODE_BALANCED') window.plugin.automultidraw.storage.fieldMode = window.plugin.automultidraw.FIELD_MODE.BALANCED;
