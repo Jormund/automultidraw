@@ -2,11 +2,11 @@
 // @id             iitc-plugin-automultidraw@Jormund
 // @name           IITC plugin: Automultidraw
 // @category       Layer
-// @version        0.1.8.20180801.1810
+// @version        0.1.8.20180801.1456
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion*
 // @updateURL      https://cdn.rawgit.com/Jormund/automultidraw/master/automultidraw.meta.js
 // @downloadURL    https://cdn.rawgit.com/Jormund/automultidraw/master/automultidraw.user.js
-// @description    [2018-08-01-1810] Autodraw for multilayered fields
+// @description    [2018-08-01-1456] Autodraw for multilayered fields
 // @include        https://ingress.com/intel*
 // @include        http://ingress.com/intel*
 // @include        https://*.ingress.com/intel*
@@ -139,6 +139,16 @@ function wrapper(plugin_info) {
         var layer;
         var layerType = 'polyline';
         layer = L.geodesicPolyline(latlngs, window.plugin.drawTools.lineOptions);
+        map.fire('draw:created', {
+            layer: layer,
+            layerType: layerType
+        });
+        return layer;
+    }
+    window.plugin.automultidraw.drawPolygon = function (latlngs) {
+        var layer;
+        var layerType = 'polygon';
+        layer = L.geodesicPolygon(latlngs, window.plugin.drawTools.polygonOptions);
         map.fire('draw:created', {
             layer: layer,
             layerType: layerType
@@ -330,7 +340,7 @@ function wrapper(plugin_info) {
             window.plugin.automultidraw.log('A:' + dirA.bkmrks.length + ',B:' + dirB.bkmrks.length + ',C:' + dirC.bkmrks.length);
 
             var fields = [];
-			window.plugin.automultidraw.fields=fields;//debug
+            window.plugin.automultidraw.fields = fields; //debug
             var latLngs = [];
             //link first field
             var curField = [];
@@ -428,7 +438,7 @@ function wrapper(plugin_info) {
                 } //end of stacked
                 if (changeDir != null) {
                     window.plugin.automultidraw.log('changeDir:' + changeDir.index);
-					window.plugin.automultidraw.log('changeDir.remainingPortalCount:' + changeDir.remainingPortalCount);
+                    window.plugin.automultidraw.log('changeDir.remainingPortalCount:' + changeDir.remainingPortalCount);
                     window.plugin.automultidraw.log('changeDir.remainingPortalRatio:' + changeDir.remainingPortalRatio);
                     window.plugin.automultidraw.log('changeDir.consecutiveLayers:' + changeDir.consecutiveLayers);
                 }
@@ -448,7 +458,7 @@ function wrapper(plugin_info) {
                             curField[i] = prevField[i];
                         }
                     });
-					fields.push(curField);
+                    fields.push(curField);
                 }
                 else {
                     //should never happen
@@ -458,46 +468,77 @@ function wrapper(plugin_info) {
                         window.plugin.automultidraw.log('Fail, changeDir.curBkmrk.dirIndex:' + changeDir.curBkmrk.dirIndex + '<br/>changeDir.bkmrks.length-1:' + (changeDir.bkmrks.length - 1));
                 }
             }
-            //TODO: draw based on fields
+            //draw based on fields
             var cumulatedArea = 0;
             var prevField = [];
+            if (options.drawnItemType == window.plugin.automultidraw.DRAWN_ITEM_TYPE.ONE_LINE_PER_LINK
+                || options.drawnItemType == window.plugin.automultidraw.DRAWN_ITEM_TYPE.ONE_POLYLINE_PER_FIELD
+                || options.drawnItemType == window.plugin.automultidraw.DRAWN_ITEM_TYPE.TWO_LINES_PER_FIELD) {
+                $.each(fields, function (fieldIndex, curField) {
+                    window.plugin.automultidraw.log('fieldIndex:' + fieldIndex); //debug
+
+                    //draw
+                    var changeIndex = -1;
+                    if (fieldIndex != 0) {
+                        for (var i = 0; i < 3; i++) {
+                            if (curField[i] != prevField[i]) {
+                                changeIndex = i;
+                                break;
+                            }
+                        }
+                    }
+                    if (options.drawnItemType == window.plugin.automultidraw.DRAWN_ITEM_TYPE.ONE_LINE_PER_LINK) {
+                        if (fieldIndex == 0) {
+                            latLngs = [curField[0].latLng, curField[1].latLng];
+                            window.plugin.automultidraw.drawLine(latLngs);
+                            latLngs = [curField[1].latLng, curField[2].latLng];
+                            window.plugin.automultidraw.drawLine(latLngs);
+                            latLngs = [curField[2].latLng, curField[0].latLng];
+                            window.plugin.automultidraw.drawLine(latLngs);
+                        }
+                        else {
+                            latLngs = [curField[changeIndex].latLng, curField[allDirs.nextIndex(changeIndex)].latLng];
+                            window.plugin.automultidraw.drawLine(latLngs);
+                            latLngs = [curField[changeIndex].latLng, curField[allDirs.prevIndex(changeIndex)].latLng];
+                            window.plugin.automultidraw.drawLine(latLngs);
+                        }
+                    }
+                    else if (options.drawnItemType == window.plugin.automultidraw.DRAWN_ITEM_TYPE.ONE_POLYLINE_PER_FIELD) {
+                        latLngs = [curField[0].latLng, curField[1].latLng, curField[2].latLng, curField[0].latLng];
+                        window.plugin.automultidraw.drawLine(latLngs);
+                    }
+                    else if (options.drawnItemType == window.plugin.automultidraw.DRAWN_ITEM_TYPE.TWO_LINES_PER_FIELD) {
+                        if (fieldIndex == 0) {
+                            latLngs = [curField[0].latLng, curField[1].latLng, curField[2].latLng, curField[0].latLng];
+                            window.plugin.automultidraw.drawLine(latLngs);
+                        }
+                        else {
+                            latLngs = [curField[allDirs.prevIndex(changeIndex)].latLng, curField[changeIndex].latLng, curField[allDirs.nextIndex(changeIndex)].latLng];
+                            window.plugin.automultidraw.drawLine(latLngs);
+                        }
+                    }
+
+                    prevField = curField;
+                });
+            }
+            else if (options.drawnItemType == window.plugin.automultidraw.DRAWN_ITEM_TYPE.ONE_POLYGON_PER_FIELD) {
+                for (var fieldIndex = fields.length - 1; fieldIndex >= 0; fieldIndex--) {//start from the bigger field so the small one is drawn on top
+                    var curField = fields[fieldIndex];
+                    latLngs = [curField[0].latLng, curField[1].latLng, curField[2].latLng];
+                    window.plugin.automultidraw.drawPolygon(latLngs);
+                }
+            }
+
+            //compute area
             $.each(fields, function (fieldIndex, curField) {
-				window.plugin.automultidraw.log('fieldIndex:'+fieldIndex);//debug
-                //compute area
+                window.plugin.automultidraw.log('fieldIndex:' + fieldIndex); //debug
+
                 var latLngs = [];
                 $.each(curField, function (bkmrkIndex, bkmrk) {
                     latLngs.push(bkmrk.latLng);
                 });
                 var area = L.GeometryUtil.geodesicArea(latLngs);
                 cumulatedArea += area;
-
-                //draw
-                var changeIndex = -1;
-                for (var i = 0; i < 3; i++) {
-                    if (curField[i] != prevField[i]) {
-                        changeIndex = i;
-                        break;
-                    }
-                }
-                if (options.drawnItemType == window.plugin.automultidraw.DRAWN_ITEM_TYPE.ONE_LINE_PER_LINK) {
-                    if (fieldIndex == 0) {
-                        latLngs = [curField[0].latLng, curField[1].latLng];
-                        window.plugin.automultidraw.drawLine(latLngs);
-                        latLngs = [curField[1].latLng, curField[2].latLng];
-                        window.plugin.automultidraw.drawLine(latLngs);
-                        latLngs = [curField[2].latLng, curField[0].latLng];
-                        window.plugin.automultidraw.drawLine(latLngs);
-                    }
-                    else {
-                        latLngs = [curField[changeIndex].latLng, curField[allDirs.nextIndex(changeIndex)].latLng];
-                        window.plugin.automultidraw.drawLine(latLngs);
-                        latLngs = [curField[changeIndex].latLng, curField[allDirs.prevIndex(changeIndex)].latLng];
-                        window.plugin.automultidraw.drawLine(latLngs);
-                    }
-                }
-                //TODO: other drawn item types
-
-                prevField = curField;
             });
 
             //TODO: user pref for showmap ?
