@@ -2,11 +2,11 @@
 // @id             iitc-plugin-automultidraw@Jormund
 // @name           IITC plugin: Automultidraw
 // @category       Layer
-// @version        0.1.8.20180801.1710
+// @version        0.1.8.20180803.1535
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion*
 // @updateURL      https://cdn.rawgit.com/Jormund/automultidraw/master/automultidraw.meta.js
 // @downloadURL    https://cdn.rawgit.com/Jormund/automultidraw/master/automultidraw.user.js
-// @description    [2018-08-01-1710] Autodraw for multilayered fields
+// @description    [2018-08-03-1535] Autodraw for multilayered fields
 // @include        https://ingress.com/intel*
 // @include        http://ingress.com/intel*
 // @include        https://*.ingress.com/intel*
@@ -31,26 +31,25 @@ function wrapper(plugin_info) {
     // use own namespace for plugin
     window.plugin.automultidraw = function () { };
     window.plugin.automultidraw.KEY_STORAGE = 'automultidraw-storage';
-    window.plugin.automultidraw.FIELD_MODE = { BALANCED: 'BALANCED', STACKED: 'STACKED' };
+    window.plugin.automultidraw.FIELD_MODE = { BALANCED: 'BALANCED', STACKED: 'STACKED', DEFAULT: 'BALANCED' };
+    //window.plugin.automultidraw.DEFAULT_FIELD_MODE = window.plugin.automultidraw.FIELD_MODE.BALANCED;
     window.plugin.automultidraw.DRAWN_ITEM_TYPE = {
         ONE_LINE_PER_LINK: 'ONE_LINE_PER_LINK',
         TWO_LINES_PER_FIELD: 'TWO_LINES_PER_FIELD',
         ONE_POLYLINE_PER_FIELD: 'ONE_POLYLINE_PER_FIELD',
-        ONE_POLYGON_PER_FIELD: 'ONE_POLYGON_PER_FIELD'
+        ONE_POLYGON_PER_FIELD: 'ONE_POLYGON_PER_FIELD',
+        DEFAULT: 'ONE_LINE_PER_LINK'
     };
+    //window.plugin.automultidraw.DEFAULT_DRAWN_ITEM_TYPE = window.plugin.automultidraw.DRAWN_ITEM_TYPE.ONE_LINE_PER_LINK;
+    window.plugin.automultidraw.DEFAULT_CLEAR_BEFORE_DRAW = true;
     window.plugin.automultidraw.storage = {
-        clearBeforeDraw: true,
-        fieldMode: window.plugin.automultidraw.FIELD_MODE.BALANCED,
-        drawnItemType: window.plugin.automultidraw.DRAWN_ITEM_TYPE.ONE_LINE_PER_LINK
+        clearBeforeDraw: window.plugin.automultidraw.DEFAULT_CLEAR_BEFORE_DRAW,
+        fieldMode: window.plugin.automultidraw.FIELD_MODE.DEFAULT,
+        drawnItemType: window.plugin.automultidraw.DRAWN_ITEM_TYPE.DEFAULT
     };
     window.plugin.automultidraw.debug = false;
     window.plugin.automultidraw.isSmart = undefined; //will be true on smartphones after setup
-    // window.plugin.automultidraw.isAndroid = function() {
-    // if(typeof android !== 'undefined' && android) {
-    // return true;
-    // }
-    // return false;
-    // }
+
     // update the localStorage datas
     window.plugin.automultidraw.saveStorage = function () {
         localStorage[window.plugin.automultidraw.KEY_STORAGE] = JSON.stringify(window.plugin.automultidraw.storage);
@@ -72,38 +71,92 @@ function wrapper(plugin_info) {
             window.plugin.automultidraw.storage.clearBeforeDraw = true;
         }
         if (typeof window.plugin.automultidraw.storage.fieldMode == "undefined") {
-            window.plugin.automultidraw.storage.fieldMode = window.plugin.automultidraw.FIELD_MODE.BALANCED;
+            window.plugin.automultidraw.storage.fieldMode = window.plugin.automultidraw.FIELD_MODE.DEFAULT;
         }
         if (typeof window.plugin.automultidraw.storage.drawnItemType == "undefined") {
-            window.plugin.automultidraw.storage.drawnItemType = window.plugin.automultidraw.DRAWN_ITEM_TYPE.ONE_LINE_PER_LINK;
+            window.plugin.automultidraw.storage.drawnItemType = window.plugin.automultidraw.DRAWN_ITEM_TYPE.DEFAULT;
         }
         //conversion from old value
         if (window.plugin.automultidraw.storage.fieldMode == 'FIELD_MODE_BALANCED') window.plugin.automultidraw.storage.fieldMode = window.plugin.automultidraw.FIELD_MODE.BALANCED;
         if (window.plugin.automultidraw.storage.fieldMode == 'FIELD_MODE_STACKED') window.plugin.automultidraw.storage.fieldMode = window.plugin.automultidraw.FIELD_MODE.STACKED;
     };
+    /***************************************************************************************************************************************************************/
+    /** OPTIONS **************************************************************************************************************************************************/
+    /***************************************************************************************************************************************************************/
+    window.plugin.automultidraw.resetOpt = function () {
+        //window.plugin.automultidraw.storage.fieldMode = window.plugin.automultidraw.DEFAULT_FIELD_MODE;
+        window.plugin.automultidraw.storage.drawnItemType = window.plugin.automultidraw.DRAWN_ITEM_TYPE.DEFAULT;
+        window.plugin.automultidraw.storage.clearBeforeDraw = window.plugin.automultidraw.DEFAULT_CLEAR_BEFORE_DRAW;
 
+        window.plugin.automultidraw.saveStorage();
+        window.plugin.automultidraw.openOptDialog();
+    }
+    window.plugin.automultidraw.saveOpt = function () {
+        //window.plugin.automultidraw.storage.fieldMode = $('#automultidraw-fieldMode').val();
+        window.plugin.automultidraw.storage.drawnItemType = $('#automultidraw-drawnItemType').val();
+        window.plugin.automultidraw.storage.clearBeforeDraw = $("#automultidraw-clearBeforeDraw").is(":checked");
+
+        window.plugin.automultidraw.saveStorage();
+    }
+    window.plugin.automultidraw.openOptDialog = function () {
+        var html =
+		'<div>' +
+			'<table>';
+        html +=
+			'<tr>' +
+				'<td>' +
+					'Clear before draw' +
+				'</td>' +
+				'<td>' +
+					'<input id="automultidraw-clearBeforeDraw" type="checkbox" ' +
+						(window.plugin.automultidraw.storage.clearBeforeDraw ? 'checked="checked" ' : '') +
+						'/>' +
+				'</td>' +
+			'</tr>';
+        html +=
+			'<tr>' +
+				'<td>' +
+					'Draw type' +
+				'</td>' +
+				'<td>' +
+					'<select id="automultidraw-drawnItemType" >' +
+                        '<option value="' + window.plugin.automultidraw.DRAWN_ITEM_TYPE.ONE_LINE_PER_LINK + '">1 line per link</option>' +
+                        '<option value="' + window.plugin.automultidraw.DRAWN_ITEM_TYPE.TWO_LINES_PER_FIELD + '">2 lines per field</option>' +
+                        '<option value="' + window.plugin.automultidraw.DRAWN_ITEM_TYPE.ONE_POLYLINE_PER_FIELD + '">1 polyline per field</option>' +
+                        '<option value="' + window.plugin.automultidraw.DRAWN_ITEM_TYPE.ONE_POLYGON_PER_FIELD + '">1 polygon per field</option>' +
+				    '</select>' +
+                '</td>' +
+			'</tr>';
+        html +=
+			'</table>' +
+		'</div>';
+
+        ;
+        dialog({
+            html: html,
+            id: 'automultidraw_opt',
+            title: 'Automultidraw preferences',
+            width: 'auto',
+            buttons: {
+                'Reset': function () {
+                    window.plugin.automultidraw.resetOpt();
+                },
+                'Save': function () {
+                    window.plugin.automultidraw.saveOpt();
+                    $(this).dialog('close');
+                }
+            }
+        });
+        $('#automultidraw-drawnItemType').val(window.plugin.automultidraw.storage.drawnItemType);
+    }
+    window.plugin.automultidraw.optClicked = function () {
+        window.plugin.automultidraw.openOptDialog();
+    }
     /***************************************************************************************************************************************************************/
     /** DRAW **************************************************************************************************************************************************/
     /***************************************************************************************************************************************************************/
     window.plugin.automultidraw.dialogDrawer = function () {
-        //$('#mobileinfo').html('Beta: no dialog'); //debug
-        //window.plugin.automultidraw.log('Beta: no dialog'); //debug
-        // dialog({
-        // html:window.plugin.automultidraw.dialogLoadList,
-        // dialogClass:'ui-dialog-autodrawer',
-        // title:'Bookmarks - Auto Draw',
-        // buttons:{
-        // 'DRAW': function() {
-        // window.plugin.automultidraw.draw(0);
-        // },
-        // 'DRAW&VIEW': function() {
-        // window.plugin.automultidraw.draw(1);
-        // }
-        // }
-        // });
-        // window.plugin.automultidraw.autoDrawOnSelect();
-
-        //version beta, on prend tous les portails
+        //no portal selection, we use them all
         window.plugin.automultidraw.drawMultilayeredField();
     }
 
@@ -161,22 +214,13 @@ function wrapper(plugin_info) {
         });
         return layer;
     }
-    //    window.plugin.automultidraw.fieldModeChanged = function () {
-    //        window.plugin.automultidraw.storage.fieldMode = $('#automultidraw-fieldMode').val();
-    //        window.plugin.automultidraw.saveStorage();
-    //    }
-    //    window.plugin.automultidraw.drawnItemTypeChanged = function () {
-    //        window.plugin.automultidraw.storage.drawnItemType = $('#automultidraw-drawnItemType').val();
-    //        window.plugin.automultidraw.saveStorage();
-    //    }
-    //    window.plugin.automultidraw.clearBeforeDrawClicked = function () {
-    //        window.plugin.automultidraw.storage.clearBeforeDraw = $("#automultidraw-clearBeforeDraw").is(":checked");
-    //        window.plugin.automultidraw.saveStorage();
-    //    };
+
+
+
     window.plugin.automultidraw.drawClicked = function () {
+        //save field mode
         window.plugin.automultidraw.storage.fieldMode = $('#automultidraw-fieldMode').val();
-        window.plugin.automultidraw.storage.drawnItemType = $('#automultidraw-drawnItemType').val();
-        window.plugin.automultidraw.storage.clearBeforeDraw = $("#automultidraw-clearBeforeDraw").is(":checked");
+
         window.plugin.automultidraw.saveStorage();
         if (window.plugin.automultidraw.storage.clearBeforeDraw) {
             window.plugin.automultidraw.resetDraw();
@@ -191,8 +235,8 @@ function wrapper(plugin_info) {
 
     window.plugin.automultidraw.drawMultilayeredField = function (options) {
         if (typeof options == 'undefined') options = {
-            fieldMode: window.plugin.automultidraw.FIELD_MODE.BALANCED,
-            drawnItemType: window.plugin.automultidraw.DRAWN_ITEM_TYPE.ONE_LINE_PER_LINK
+            fieldMode: window.plugin.automultidraw.FIELD_MODE.DEFAULT,
+            drawnItemType: window.plugin.automultidraw.DRAWN_ITEM_TYPE.DEFAULT
         };
 
         try {
@@ -634,25 +678,23 @@ function wrapper(plugin_info) {
         var amdToolbox = $('#automultidraw-toolbox');
         amdToolbox.append(' <strong>Automultidraw : </strong>');
         amdToolbox.append('<a onclick="window.plugin.automultidraw.drawClicked()" title="Draw multilayered field between bookmarked portals">Draw</a>&nbsp;&nbsp;');
-        //.append(' <a onclick="window.plugin.automultidraw.drawBalanced()" title="Draw balanced multilayered field between bookmarked portals">Balanced</a>&nbsp;&nbsp;')
-        //.append(' <a onclick="window.plugin.automultidraw.drawStacked()" title="Draw multilayered field between bookmarks stacking fields on first portal">Stacked</a>&nbsp;&nbsp;')
-        //.append(' <a onclick="window.plugin.automultidraw.resetDraw()">Clear all draws</a>');
-        amdToolbox.append('<select id="automultidraw-fieldMode" ></select>'); //onchange="window.plugin.automultidraw.fieldModeChanged()"
+        amdToolbox.append('<select id="automultidraw-fieldMode" ></select>&nbsp;'); //onchange="window.plugin.automultidraw.fieldModeChanged()"
         $('#automultidraw-fieldMode').append('<option value="' + window.plugin.automultidraw.FIELD_MODE.BALANCED + '">Balanced</option>')
 									.append('<option value="' + window.plugin.automultidraw.FIELD_MODE.STACKED + '">Stacked</option>')
 									;
-        amdToolbox.append('<select id="automultidraw-drawnItemType" ></select>'); //onchange="window.plugin.automultidraw.drawnItemTypeChanged()"
-        $('#automultidraw-drawnItemType').append('<option value="' + window.plugin.automultidraw.DRAWN_ITEM_TYPE.ONE_LINE_PER_LINK + '">1 line per link</option>')
-                                    .append('<option value="' + window.plugin.automultidraw.DRAWN_ITEM_TYPE.TWO_LINES_PER_FIELD + '">2 lines per field</option>')
-                                    .append('<option value="' + window.plugin.automultidraw.DRAWN_ITEM_TYPE.ONE_POLYLINE_PER_FIELD + '">1 polyline per field</option>')
-									.append('<option value="' + window.plugin.automultidraw.DRAWN_ITEM_TYPE.ONE_POLYGON_PER_FIELD + '">1 polygon per field</option>')
-									;
-        amdToolbox.append(' <br /><input id="automultidraw-clearBeforeDraw" type="checkbox"/>'); // onclick="window.plugin.automultidraw.clearBeforeDrawClicked()" 
-        amdToolbox.append('<label for="automultidraw-clearBeforeDraw">Clear before draw</label>');
+        amdToolbox.append('<a onclick="window.plugin.automultidraw.optClicked()" title="Preferences">Opt</a>&nbsp;&nbsp;');
+        //        amdToolbox.append('<select id="automultidraw-drawnItemType" ></select>'); //onchange="window.plugin.automultidraw.drawnItemTypeChanged()"
+        //        $('#automultidraw-drawnItemType').append('<option value="' + window.plugin.automultidraw.DRAWN_ITEM_TYPE.ONE_LINE_PER_LINK + '">1 line per link</option>')
+        //                                    .append('<option value="' + window.plugin.automultidraw.DRAWN_ITEM_TYPE.TWO_LINES_PER_FIELD + '">2 lines per field</option>')
+        //                                    .append('<option value="' + window.plugin.automultidraw.DRAWN_ITEM_TYPE.ONE_POLYLINE_PER_FIELD + '">1 polyline per field</option>')
+        //									.append('<option value="' + window.plugin.automultidraw.DRAWN_ITEM_TYPE.ONE_POLYGON_PER_FIELD + '">1 polygon per field</option>')
+        //									;
+        //        amdToolbox.append(' <br /><input id="automultidraw-clearBeforeDraw" type="checkbox"/>'); // onclick="window.plugin.automultidraw.clearBeforeDrawClicked()" 
+        //        amdToolbox.append('<label for="automultidraw-clearBeforeDraw">Clear before draw</label>');
 
-        $('#automultidraw-clearBeforeDraw').prop('checked', window.plugin.automultidraw.storage.clearBeforeDraw);
-        $('#automultidraw-fieldMode').val(window.plugin.automultidraw.storage.fieldMode);
-        $('#automultidraw-drawnItemType').val(window.plugin.automultidraw.storage.drawnItemType);
+        //        $('#automultidraw-clearBeforeDraw').prop('checked', window.plugin.automultidraw.storage.clearBeforeDraw);
+        //        $('#automultidraw-fieldMode').val(window.plugin.automultidraw.storage.fieldMode);
+        //        $('#automultidraw-drawnItemType').val(window.plugin.automultidraw.storage.drawnItemType);
 
         $('#automultidraw-toolbox').append('<div id="automultidraw-message"></div>');
 
