@@ -2,11 +2,11 @@
 // @id             iitc-plugin-automultidraw@Jormund
 // @name           IITC plugin: Automultidraw
 // @category       Layer
-// @version        0.1.8.20180803.1616
+// @version        0.1.8.20180804.2147
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
 // @updateURL      https://cdn.rawgit.com/Jormund/automultidraw/master/automultidraw.meta.js
 // @downloadURL    https://cdn.rawgit.com/Jormund/automultidraw/master/automultidraw.user.js
-// @description    [2018-08-03-1616] Autodraw for multilayered fields
+// @description    [2018-08-04-2147] Autodraw for multilayered fields
 // @include        https://ingress.com/intel*
 // @include        http://ingress.com/intel*
 // @include        https://*.ingress.com/intel*
@@ -693,7 +693,7 @@ function wrapper(plugin_info) {
         //        amdToolbox.append('<label for="automultidraw-clearBeforeDraw">Clear before draw</label>');
 
         //        $('#automultidraw-clearBeforeDraw').prop('checked', window.plugin.automultidraw.storage.clearBeforeDraw);
-        //        $('#automultidraw-fieldMode').val(window.plugin.automultidraw.storage.fieldMode);
+        $('#automultidraw-fieldMode').val(window.plugin.automultidraw.storage.fieldMode);
         //        $('#automultidraw-drawnItemType').val(window.plugin.automultidraw.storage.drawnItemType);
 
         $('#automultidraw-toolbox').append('<div id="automultidraw-message"></div>');
