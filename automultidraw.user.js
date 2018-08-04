@@ -2,11 +2,11 @@
 // @id             iitc-plugin-automultidraw@Jormund
 // @name           IITC plugin: Automultidraw
 // @category       Layer
-// @version        0.1.8.20180804.2147
+// @version        0.1.8.20180804.2153
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
 // @updateURL      https://cdn.rawgit.com/Jormund/automultidraw/master/automultidraw.meta.js
 // @downloadURL    https://cdn.rawgit.com/Jormund/automultidraw/master/automultidraw.user.js
-// @description    [2018-08-04-2147] Autodraw for multilayered fields
+// @description    [2018-08-04-2153] Autodraw for multilayered fields
 // @include        https://ingress.com/intel*
 // @include        http://ingress.com/intel*
 // @include        https://*.ingress.com/intel*
@@ -132,7 +132,7 @@ function wrapper(plugin_info) {
 		'</div>';
 
         ;
-        dialog({
+        var d = dialog({
             html: html,
             id: 'automultidraw_opt',
             title: 'Automultidraw preferences',
@@ -148,6 +148,8 @@ function wrapper(plugin_info) {
             }
         });
         $('#automultidraw-drawnItemType').val(window.plugin.automultidraw.storage.drawnItemType);
+		var dialogId = d.data('id'); //dialog-bookmarkUnderDraw_opt
+        $("#" + dialogId + "").parent().find(".ui-dialog-buttonpane .ui-button .ui-button-text:contains('OK')").parent().hide(); //remove the default OK button
     }
     window.plugin.automultidraw.optClicked = function () {
         window.plugin.automultidraw.openOptDialog();
