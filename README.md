@@ -17,6 +17,8 @@ How to use it:
 "Balanced" mode will try to balance the number of links per portal. If all spines are the same length (same number of portals), the drawing will rotate which spine is used for each layer.  1, 2, 3, 1, 2, 3, etc.  
 
 The plugin finds the different spines based on distance. The 2 biggest distances between consecutive bookmarks are assumed to be the limits. If it doesn't work for you, you can define manually the 3 spines: put the bookmarks in 3 folders (or 2 folders and let the remaining portals in the default one)
+Folders that will have the same result:
+![2 folders](https://cdn.rawgit.com/Jormund/automultidraw/master/img/2folders.png) ![3 folders](https://cdn.rawgit.com/Jormund/automultidraw/master/img/3folders.png)
 
 By default, the existing draw will be cleared when you click draw. It can be changed in the options.
 
