@@ -16,6 +16,11 @@ How to use it:
 "Stacked" mode will add all the portals from the first set (spine) to the drawing, then all the second, then all the third.  1, 1, 1, etc., 2, 2, 2, etc., 3, 3, 3, etc.  
 "Balanced" mode will try to balance the number of links per portal. If all spines are the same length (same number of portals), the drawing will rotate which spine is used for each layer.  1, 2, 3, 1, 2, 3, etc.  
 
+Stacked example (notice 3 top right portals are used first, top left used last):
+![Stacked](https://cdn.rawgit.com/Jormund/automultidraw/master/img/stacked.png)
+Balanced example (notice how the fields alternates between directions):
+![Stacked](https://cdn.rawgit.com/Jormund/automultidraw/master/img/stacked.png)
+
 The plugin finds the different spines based on distance. The 2 biggest distances between consecutive bookmarks are assumed to be the limits. If it doesn't work for you, you can define manually the 3 spines: put the bookmarks in 3 folders (or 2 folders and let the remaining portals in the default one)  
 Folders that will have the same result:  
 ![2 folders](https://cdn.rawgit.com/Jormund/automultidraw/master/img/2folders.png) ![3 folders](https://cdn.rawgit.com/Jormund/automultidraw/master/img/3folders.png)
