@@ -2,11 +2,11 @@
 // @id             iitc-plugin-automultidraw@Jormund
 // @name           IITC plugin: Automultidraw
 // @category       Layer
-// @version        0.1.9.20181030.1350
+// @version        0.1.9.20181030.1405
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
-// @updateURL      https://cdn.rawgit.com/Jormund/automultidraw/master/automultidraw.meta.js
-// @downloadURL    https://cdn.rawgit.com/Jormund/automultidraw/master/automultidraw.user.js
-// @description    [2018-10-30-1350] Autodraw for multilayered fields
+// @updateURL      https://github.com/Jormund/automultidraw/raw/master/automultidraw.meta.js
+// @downloadURL    https://github.com/Jormund/automultidraw/raw/master/automultidraw.user.js
+// @description    [2018-10-30-1405] Autodraw for multilayered fields
 // @include        https://ingress.com/intel*
 // @include        http://ingress.com/intel*
 // @include        https://*.ingress.com/intel*
@@ -18,7 +18,7 @@
 // @grant          none
 // ==/UserScript==
 //Changelog
-//0.1.9: activate on intel.ingress.com
+//0.1.9: activate on intel.ingress.com, changed download url to github
 //0.1.8: allow choosing between polygons and polylines
 //0.1.7: display number of fields (layers)
 //0.1.6: display cumulated area
