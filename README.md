@@ -1,8 +1,8 @@
 # IITC plugin : Automultidraw
-[Download plugin](https://cdn.rawgit.com/Jormund/automultidraw/master/automultidraw.user.js)  
+[Download plugin](https://raw.githubusercontent.com/Jormund/automultidraw/master/automultidraw.user.js)  
 Requires draw tools and bookmarks.
 
-![How to animation](https://cdn.rawgit.com/Jormund/automultidraw/master/img/stacked.gif)  
+![How to animation](https://raw.githubusercontent.com/Jormund/automultidraw/master/img/stacked.gif)  
 How to use it:
 1) Save existing bookmarks and draws so you don't lose them. ([bookmarkstore](https://cdn.rawgit.com/Jormund/bookmarkstore/master/bookmarkstore.user.js) and [drawstore](https://github.com/Hurqalia/drawstore/raw/master/drawstore.user.js) can help you with that)
 2) Clear bookmarks.
@@ -11,19 +11,22 @@ How to use it:
 5) Bookmark the third set of portals (3rd spine), from the inside out.
 6) Click "draw" in the side panel. Done!
 
-![Side panel](https://cdn.rawgit.com/Jormund/automultidraw/master/img/toolbox.png)
+![Side panel](https://raw.githubusercontent.com/Jormund/automultidraw/master/img/toolbox.png)
 
 "Stacked" mode will add all the portals from the first set (spine) to the drawing, then all the second, then all the third.  1, 1, 1, etc., 2, 2, 2, etc., 3, 3, 3, etc.  
 "Balanced" mode will try to balance the number of links per portal. If all spines are the same length (same number of portals), the drawing will rotate which spine is used for each layer.  1, 2, 3, 1, 2, 3, etc.  
 
 Stacked example (notice 3 top right portals are used first, top left used last):  
-![Stacked polygons](https://cdn.rawgit.com/Jormund/automultidraw/master/img/stacked-polygons.png)  
+![Stacked polygons](https://raw.githubusercontent.com/Jormund/automultidraw/master/img/stacked-polygons.png)  
 Balanced example (notice how the fields alternates between directions):  
-![Balanced polygons](https://cdn.rawgit.com/Jormund/automultidraw/master/img/balanced-polygons.png)
+![Balanced polygons](https://raw.githubusercontent.com/Jormund/automultidraw/master/img/balanced-polygons.png)
 
-The plugin finds the different sets based on distance. The 2 biggest distances between consecutive bookmarks are assumed to be the limits. If it doesn't work for you, you can define manually the 3 sets: put the bookmarks in 3 folders (or 2 folders and let the remaining portals in the default one)  
+The plugin finds the different spines based on distance. The 2 biggest distances between consecutive bookmarks are assumed to be the limits. If it doesn't work for you, you can define manually the 3 spines: put the bookmarks in 3 folders (or 2 folders and let the remaining portals in the default one)  
 Folders that will have the same result:  
-![2 folders](https://cdn.rawgit.com/Jormund/automultidraw/master/img/2folders.png) ![3 folders](https://cdn.rawgit.com/Jormund/automultidraw/master/img/3folders.png)
+![2 folders](https://raw.githubusercontent.com/Jormund/automultidraw/master/img/2folders.png) ![3 folders](https://raw.githubusercontent.com/Jormund/automultidraw/master/img/3folders.png)
+If you have only one spine and two main anchors, it's like having spines of one portal. You can put the two anchors in two folders:
+![1spine-2folders](https://raw.githubusercontent.com/Jormund/automultidraw/master/img/1spine-2folders.png)
+![1spine-2folders-draw](https://raw.githubusercontent.com/Jormund/automultidraw/master/img/1spine-2folders-draw.png)
 
 By default, the existing draw will be cleared when you click draw. It can be changed in the options.
 
