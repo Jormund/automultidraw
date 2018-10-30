@@ -23,8 +23,8 @@ Balanced example (notice how the fields alternates between directions):
 
 The plugin finds the different spines based on distance. The 2 biggest distances between consecutive bookmarks are assumed to be the limits. If it doesn't work for you, you can define manually the 3 spines: put the bookmarks in 3 folders (or 2 folders and let the remaining portals in the default one)  
 Folders that will have the same result:  
-![2 folders](https://raw.githubusercontent.com/Jormund/automultidraw/master/img/2folders.png) ![3 folders](https://raw.githubusercontent.com/Jormund/automultidraw/master/img/3folders.png)
-If you have only one spine and two main anchors, it's like having spines of one portal. You can put the two anchors in two folders:
+![2 folders](https://raw.githubusercontent.com/Jormund/automultidraw/master/img/2folders.png) ![3 folders](https://raw.githubusercontent.com/Jormund/automultidraw/master/img/3folders.png)  
+If you have only one spine and two main anchors, it's like having spines of one portal. You can put the two anchors in two folders:  
 ![1spine-2folders](https://raw.githubusercontent.com/Jormund/automultidraw/master/img/1spine-2folders.png)
 ![1spine-2folders-draw](https://raw.githubusercontent.com/Jormund/automultidraw/master/img/1spine-2folders-draw.png)
 
