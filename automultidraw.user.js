@@ -2,17 +2,18 @@
 // @id             iitc-plugin-automultidraw@Jormund
 // @name           IITC plugin: Automultidraw
 // @category       Layer
-// @version        1.0.1.20221113.2221
+// @version        1.1.0.20230402.0005
+// @description    [2023-04-02-0005] Autodraw for multilayered fields
 // @namespace      https://github.com/jonatkins/ingress-intel-total-conversion
 // @updateURL      https://raw.githubusercontent.com/Jormund/automultidraw/master/automultidraw.meta.js
 // @downloadURL    https://raw.githubusercontent.com/Jormund/automultidraw/master/automultidraw.user.js
-// @description    [2022-11-13-2221] Autodraw for multilayered fields
 // @match          https://intel.ingress.com/*
 // @match          https://intel-x.ingress.com/*
 // @match          https://*.ingress.com/intel*
 // @grant          none
 // ==/UserScript==
 //Changelog
+//1.1.0: Added dropdownlist "number of players" to change link sense
 //1.0.1: Activate on intel-x.ingress.com
 //1.0.0: option to fit map to the draw
 //0.1.9: activate on intel.ingress.com, changed download url to github
@@ -32,7 +33,7 @@ function wrapper(plugin_info) {
     window.plugin.automultidraw = function () { };
     window.plugin.automultidraw.KEY_STORAGE = 'automultidraw-storage';
     window.plugin.automultidraw.FIELD_MODE = { BALANCED: 'BALANCED', STACKED: 'STACKED', DEFAULT: 'BALANCED' };
-    //window.plugin.automultidraw.DEFAULT_FIELD_MODE = window.plugin.automultidraw.FIELD_MODE.BALANCED;
+    window.plugin.automultidraw.NB_PLAYERS = { ONE: '1', TWO: '2', THREE: '3', DEFAULT: '3' };
     window.plugin.automultidraw.DRAWN_ITEM_TYPE = {
         ONE_LINE_PER_LINK: 'ONE_LINE_PER_LINK',
         TWO_LINES_PER_FIELD: 'TWO_LINES_PER_FIELD',
@@ -40,15 +41,13 @@ function wrapper(plugin_info) {
         ONE_POLYGON_PER_FIELD: 'ONE_POLYGON_PER_FIELD',
         DEFAULT: 'ONE_LINE_PER_LINK'
     };
-    //window.plugin.automultidraw.DEFAULT_DRAWN_ITEM_TYPE = window.plugin.automultidraw.DRAWN_ITEM_TYPE.ONE_LINE_PER_LINK;
     window.plugin.automultidraw.DEFAULT_CLEAR_BEFORE_DRAW = true;
-    //window.plugin.automultidraw.DEFAULT_VIEW_AFTER_DRAW = true;
     window.plugin.automultidraw.DEFAULT_AUTOFIT = true;
     window.plugin.automultidraw.storage = {
         clearBeforeDraw: window.plugin.automultidraw.DEFAULT_CLEAR_BEFORE_DRAW,
         fieldMode: window.plugin.automultidraw.FIELD_MODE.DEFAULT,
+        nbPlayers: window.plugin.automultidraw.NB_PLAYERS.DEFAULT,
         drawnItemType: window.plugin.automultidraw.DRAWN_ITEM_TYPE.DEFAULT,
-        //viewAfterDraw: window.plugin.automultidraw.DEFAULT_VIEW_AFTER_DRAW,
         autofit: window.plugin.automultidraw.DEFAULT_AUTOFIT
     };
     window.plugin.automultidraw.debug = false;
@@ -77,6 +76,9 @@ function wrapper(plugin_info) {
         if (typeof window.plugin.automultidraw.storage.fieldMode != "string") {
             window.plugin.automultidraw.storage.fieldMode = window.plugin.automultidraw.FIELD_MODE.DEFAULT;
         }
+        if (typeof window.plugin.automultidraw.storage.nbPlayers != "string") {
+            window.plugin.automultidraw.storage.nbPlayers = window.plugin.automultidraw.NB_PLAYERS.DEFAULT;
+        }
         if (typeof window.plugin.automultidraw.storage.drawnItemType != "string") {
             window.plugin.automultidraw.storage.drawnItemType = window.plugin.automultidraw.DRAWN_ITEM_TYPE.DEFAULT;
         }
@@ -93,7 +95,7 @@ function wrapper(plugin_info) {
     /** OPTIONS **************************************************************************************************************************************************/
     /***************************************************************************************************************************************************************/
     window.plugin.automultidraw.resetOpt = function () {
-        //window.plugin.automultidraw.storage.fieldMode = window.plugin.automultidraw.DEFAULT_FIELD_MODE;
+        window.plugin.automultidraw.storage.nbPlayers = window.plugin.automultidraw.NB_PLAYERS;
         window.plugin.automultidraw.storage.drawnItemType = window.plugin.automultidraw.DRAWN_ITEM_TYPE.DEFAULT;
         window.plugin.automultidraw.storage.clearBeforeDraw = window.plugin.automultidraw.DEFAULT_CLEAR_BEFORE_DRAW;
         window.plugin.automultidraw.storage.autofit = window.plugin.automultidraw.DEFAULT_AUTOFIT;
@@ -102,7 +104,7 @@ function wrapper(plugin_info) {
         window.plugin.automultidraw.openOptDialog();
     }
     window.plugin.automultidraw.saveOpt = function () {
-        //window.plugin.automultidraw.storage.fieldMode = $('#automultidraw-fieldMode').val();       
+        window.plugin.automultidraw.storage.nbPlayers = $('#automultidraw-nbPlayers').val();
         window.plugin.automultidraw.storage.clearBeforeDraw = $("#automultidraw-clearBeforeDraw").is(":checked");
         window.plugin.automultidraw.storage.autofit = $('#automultidraw-autofit').is(":checked");
         window.plugin.automultidraw.storage.drawnItemType = $('#automultidraw-drawnItemType').val();
@@ -150,6 +152,19 @@ function wrapper(plugin_info) {
             '</td>' +
             '</tr>';
         html +=
+            '<tr>' +
+            '<td>' +
+            'Players' +
+            '</td>' +
+            '<td>' +
+            '<select id="automultidraw-nbPlayers" >' +
+            '<option value="' + window.plugin.automultidraw.NB_PLAYERS.ONE + '">1</option>' +
+            '<option value="' + window.plugin.automultidraw.NB_PLAYERS.TWO + '">2</option>' +
+            '<option value="' + window.plugin.automultidraw.NB_PLAYERS.THREE + '">3</option>' +
+            '</select>' +
+            '</td>' +
+            '</tr>';
+        html +=
             '</table>' +
             '</div>';
 
@@ -170,6 +185,7 @@ function wrapper(plugin_info) {
             }
         });
         $('#automultidraw-drawnItemType').val(window.plugin.automultidraw.storage.drawnItemType);
+        $('#automultidraw-nbPlayers').val(window.plugin.automultidraw.storage.nbPlayers);
         var dialogId = d.data('id'); //dialog-bookmarkUnderDraw_opt
         $("#" + dialogId + "").parent().find(".ui-dialog-buttonpane .ui-button .ui-button-text:contains('OK')").parent().hide(); //remove the default OK button
     }
@@ -252,6 +268,7 @@ function wrapper(plugin_info) {
 
         var options = {
             fieldMode: window.plugin.automultidraw.storage.fieldMode,
+            nbPlayers: window.plugin.automultidraw.storage.nbPlayers,
             drawnItemType: window.plugin.automultidraw.storage.drawnItemType,
             autofit: window.plugin.automultidraw.storage.autofit
         }
@@ -262,6 +279,7 @@ function wrapper(plugin_info) {
         if (typeof options == 'undefined')
             options = {
                 fieldMode: window.plugin.automultidraw.FIELD_MODE.DEFAULT,
+                nbPlayers: window.plugin.automultidraw.NB_PLAYERS.DEFAULT,
                 drawnItemType: window.plugin.automultidraw.DRAWN_ITEM_TYPE.DEFAULT,
                 autofit: window.plugin.automultidraw.DEFAULT_AUTOFIT
             };
@@ -521,7 +539,8 @@ function wrapper(plugin_info) {
                 }
                 //link the portal
                 if (changeDir != null
-                    && changeDir.curBkmrk.dirIndex < (changeDir.bkmrks.length - 1)) {//test that we are not already on last portal just to be sure, but that should never happen
+                    //test that we are not already on last portal just to be sure, but that should never happen
+                    && changeDir.curBkmrk.dirIndex < (changeDir.bkmrks.length - 1)) {
                     window.plugin.automultidraw.log('Portal added in direction:' + changeDir.index);
 
                     changeDir.curBkmrk = changeDir.bkmrks[changeDir.curBkmrk.dirIndex + 1];
@@ -566,18 +585,70 @@ function wrapper(plugin_info) {
                     }
                     if (options.drawnItemType == window.plugin.automultidraw.DRAWN_ITEM_TYPE.ONE_LINE_PER_LINK) {
                         if (fieldIndex == 0) {
-                            latLngs = [curField[0].latLng, curField[1].latLng];
-                            window.plugin.automultidraw.drawLine(latLngs);
-                            latLngs = [curField[1].latLng, curField[2].latLng];
-                            window.plugin.automultidraw.drawLine(latLngs);
-                            latLngs = [curField[2].latLng, curField[0].latLng];
-                            window.plugin.automultidraw.drawLine(latLngs);
+                            if (options.nbPlayers == window.plugin.automultidraw.NB_PLAYERS.THREE) {
+                                latLngs = [curField[0].latLng, curField[1].latLng];
+                                window.plugin.automultidraw.drawLine(latLngs);
+                                latLngs = [curField[1].latLng, curField[2].latLng];
+                                window.plugin.automultidraw.drawLine(latLngs);
+                                latLngs = [curField[2].latLng, curField[0].latLng];
+                                window.plugin.automultidraw.drawLine(latLngs);
+                            }
+                            else {
+                                latLngs = [curField[1].latLng, curField[0].latLng];
+                                window.plugin.automultidraw.drawLine(latLngs);
+                                latLngs = [curField[2].latLng, curField[1].latLng];
+                                window.plugin.automultidraw.drawLine(latLngs);
+                                latLngs = [curField[2].latLng, curField[0].latLng];
+                                window.plugin.automultidraw.drawLine(latLngs);
+                            }
                         }
                         else {
-                            latLngs = [curField[changeIndex].latLng, curField[allDirs.nextIndex(changeIndex)].latLng];
-                            window.plugin.automultidraw.drawLine(latLngs);
-                            latLngs = [curField[changeIndex].latLng, curField[allDirs.prevIndex(changeIndex)].latLng];
-                            window.plugin.automultidraw.drawLine(latLngs);
+                            if (options.nbPlayers == window.plugin.automultidraw.NB_PLAYERS.THREE) {
+                                latLngs = [curField[changeIndex].latLng, curField[allDirs.nextIndex(changeIndex)].latLng];
+                                window.plugin.automultidraw.drawLine(latLngs);
+                                latLngs = [curField[changeIndex].latLng, curField[allDirs.prevIndex(changeIndex)].latLng];
+                                window.plugin.automultidraw.drawLine(latLngs);
+                            }
+                            else if (options.nbPlayers == window.plugin.automultidraw.NB_PLAYERS.TWO) {
+                                if (changeIndex == 0) {
+                                    latLngs = [curField[1].latLng, curField[0].latLng];
+                                    window.plugin.automultidraw.drawLine(latLngs);
+                                    latLngs = [curField[2].latLng, curField[0].latLng];
+                                    window.plugin.automultidraw.drawLine(latLngs);
+                                }
+                                else if (changeIndex == 1) {
+                                    latLngs = [curField[1].latLng, curField[0].latLng];
+                                    window.plugin.automultidraw.drawLine(latLngs);
+                                    latLngs = [curField[1].latLng, curField[2].latLng];
+                                    window.plugin.automultidraw.drawLine(latLngs);
+                                }
+                                else if (changeIndex == 2) {
+                                    latLngs = [curField[2].latLng, curField[0].latLng];
+                                    window.plugin.automultidraw.drawLine(latLngs);
+                                    latLngs = [curField[2].latLng, curField[1].latLng];
+                                    window.plugin.automultidraw.drawLine(latLngs);
+                                }
+                            }
+                            else if (options.nbPlayers == window.plugin.automultidraw.NB_PLAYERS.ONE) {
+                                if (changeIndex == 0) {
+                                    latLngs = [curField[1].latLng, curField[0].latLng];
+                                    window.plugin.automultidraw.drawLine(latLngs);
+                                    latLngs = [curField[2].latLng, curField[0].latLng];
+                                    window.plugin.automultidraw.drawLine(latLngs);
+                                }
+                                else if (changeIndex == 1) {
+                                    latLngs = [curField[1].latLng, curField[0].latLng];
+                                    window.plugin.automultidraw.drawLine(latLngs);
+                                    latLngs = [curField[2].latLng, curField[1].latLng];
+                                    window.plugin.automultidraw.drawLine(latLngs);
+                                }
+                                else if (changeIndex == 2) {
+                                    latLngs = [curField[2].latLng, curField[0].latLng];
+                                    window.plugin.automultidraw.drawLine(latLngs);
+                                    latLngs = [curField[2].latLng, curField[1].latLng];
+                                    window.plugin.automultidraw.drawLine(latLngs);
+                                }
+                            }
                         }
                     }
                     else if (options.drawnItemType == window.plugin.automultidraw.DRAWN_ITEM_TYPE.ONE_POLYLINE_PER_FIELD) {
@@ -711,18 +782,7 @@ function wrapper(plugin_info) {
             .append('<option value="' + window.plugin.automultidraw.FIELD_MODE.STACKED + '">Stacked</option>')
             ;
         amdToolbox.append('<a onclick="window.plugin.automultidraw.optClicked()" title="Preferences">Opt</a>&nbsp;&nbsp;');
-        //        amdToolbox.append('<select id="automultidraw-drawnItemType" ></select>'); //onchange="window.plugin.automultidraw.drawnItemTypeChanged()"
-        //        $('#automultidraw-drawnItemType').append('<option value="' + window.plugin.automultidraw.DRAWN_ITEM_TYPE.ONE_LINE_PER_LINK + '">1 line per link</option>')
-        //                                    .append('<option value="' + window.plugin.automultidraw.DRAWN_ITEM_TYPE.TWO_LINES_PER_FIELD + '">2 lines per field</option>')
-        //                                    .append('<option value="' + window.plugin.automultidraw.DRAWN_ITEM_TYPE.ONE_POLYLINE_PER_FIELD + '">1 polyline per field</option>')
-        //									.append('<option value="' + window.plugin.automultidraw.DRAWN_ITEM_TYPE.ONE_POLYGON_PER_FIELD + '">1 polygon per field</option>')
-        //									;
-        //        amdToolbox.append(' <br /><input id="automultidraw-clearBeforeDraw" type="checkbox"/>'); // onclick="window.plugin.automultidraw.clearBeforeDrawClicked()" 
-        //        amdToolbox.append('<label for="automultidraw-clearBeforeDraw">Clear before draw</label>');
-
-        //        $('#automultidraw-clearBeforeDraw').prop('checked', window.plugin.automultidraw.storage.clearBeforeDraw);
         $('#automultidraw-fieldMode').val(window.plugin.automultidraw.storage.fieldMode);
-        //        $('#automultidraw-drawnItemType').val(window.plugin.automultidraw.storage.drawnItemType);
 
         $('#automultidraw-toolbox').append('<div id="automultidraw-message"></div>');
 
